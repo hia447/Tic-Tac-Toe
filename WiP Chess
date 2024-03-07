@@ -1,0 +1,100 @@
+def initialize_board():
+    return [
+        ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
+        ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
+        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+        ['P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'],
+        ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']
+    ]
+
+def print_board(board):
+    print("   a b c d e f g h")
+    print(" +----------------")
+    for i, row in enumerate(board, 1):
+        print(f"{i}|", " ".join(row))
+    print()
+
+def get_coordinates(move):
+    try:
+        from_file, from_rank, to_file, to_rank = move[0], int(move[1]) - 1, move[2], int(move[3]) - 1
+        return from_rank, ord(from_file) - ord('a'), to_rank, ord(to_file) - ord('a')
+    except (ValueError, IndexError):
+        return None
+
+def is_valid_move(board, from_rank, from_file, to_rank, to_file):
+    try:
+        piece = board[from_rank][from_file]
+        if piece == ' ':
+            return False
+        if piece.islower() and to_rank <= from_rank:
+            return False
+        if piece.isupper() and to_rank >= from_rank:
+            return False
+        if (to_rank, to_file) not in legal_moves(board, from_rank, from_file):
+            return False
+    except IndexError:
+        return False
+
+    return True
+
+def legal_moves(board, rank, file):
+    piece = board[rank][file].lower()
+    moves = []
+    directions = [(1, 0), (-1, 0), (0, 1), (0, -1),
+                  (1, 1), (1, -1), (-1, 1), (-1, -1)]
+
+    if piece == 'p':
+        direction = 1 if board[rank][file].islower() else -1
+        if 0 <= rank + direction < 8 and board[rank + direction][file] == ' ':
+            moves.append((rank + direction, file))
+            if rank == (1 if board[rank][file].islower() else 6) and board[rank + 2 * direction][file] == ' ':
+                moves.append((rank + 2 * direction, file))
+        if 0 <= rank + direction < 8 and 0 <= file + 1 < 8 and board[rank + direction][file + 1].isupper():
+            moves.append((rank + direction, file + 1))
+        if 0 <= rank + direction < 8 and 0 <= file - 1 < 8 and board[rank + direction][file - 1].isupper():
+            moves.append((rank + direction, file - 1))
+    else:
+        for dr, df in directions:
+            r, f = rank + dr, file + df
+            while 0 <= r < 8 and 0 <= f < 8:
+                if board[r][f] == ' ':
+                    moves.append((r, f))
+                elif board[r][f].islower() if piece.isupper() else board[r][f].isupper():
+                    moves.append((r, f))
+                    break
+                else:
+                    break
+                r, f = r + dr, f + df
+
+    return moves
+
+def make_move(board, from_rank, from_file, to_rank, to_file):
+    piece = board[from_rank][from_file]
+    board[from_rank][from_file] = ' '
+    board[to_rank][to_file] = piece
+
+def main():
+    board = initialize_board()
+
+    while True:
+        print_board(board)
+        move = input("Enter your move (e.g., 'e2e4'): ")
+        coordinates = get_coordinates(move)
+
+        if coordinates is None:
+            print("Invalid input. Try again.")
+            continue
+
+        from_rank, from_file, to_rank, to_file = coordinates
+
+        if is_valid_move(board, from_rank, from_file, to_rank, to_file):
+            make_move(board, from_rank, from_file, to_rank, to_file)
+        else:
+            print("Invalid move. Try again.")
+
+if __name__ == "__main__":
+    main()
+
